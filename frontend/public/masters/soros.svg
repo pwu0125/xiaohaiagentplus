@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#1a1a2e"/>
+  
+  <!-- Avatar initials -->
+  <circle cx="100" cy="100" r="80" fill="#60a5fa" opacity="0.2"/>
+  <text x="100" y="120" font-size="80" font-weight="bold" fill="#60a5fa" text-anchor="middle" font-family="Arial, sans-serif">G</text>
+  
+  <!-- Decorative elements for investment/macro theme -->
+  <circle cx="40" cy="40" r="3" fill="#fbbf24" opacity="0.6"/>
+  <circle cx="160" cy="40" r="3" fill="#fbbf24" opacity="0.6"/>
+  <circle cx="40" cy="160" r="3" fill="#fbbf24" opacity="0.6"/>
+  <circle cx="160" cy="160" r="3" fill="#fbbf24" opacity="0.6"/>
+  
+  <!-- Market/arrow elements -->
+  <g stroke="#60a5fa" stroke-width="2" opacity="0.4" stroke-linecap="round">
+    <path d="M 60 80 L 80 70 L 75 90"/>
+  </g>
+</svg>
