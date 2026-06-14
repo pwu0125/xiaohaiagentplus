@@ -26,6 +26,10 @@ const DEPARTMENT_OPTIONS = [
   { value: 'legal', label: '法律部', color: 'violet' },
 ];
 
+const MASTER_AVATARS: Record<string, string> = {
+  'trump-skill': 'trump.png',
+};
+
 const COLOR_MAP: Record<string, { border: string; bg: string; text: string; dot: string }> = {
   red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-400', dot: 'bg-red-400' },
   indigo: { border: 'border-indigo-500', bg: 'bg-indigo-500/10', text: 'text-indigo-400', dot: 'bg-indigo-400' },
@@ -230,7 +234,7 @@ function FileUploadComponent({ onStart, showProjectTypes = true, showDepts = tru
                   )}
                 >
                   <img
-                    src={`/masters/${master.value}.png`}
+                    src={`/masters/${MASTER_AVATARS[master.value] || master.value}.png`}
                     alt={master.label}
                     className={cn(
                       'w-10 h-10 rounded-full object-cover shrink-0 border',
