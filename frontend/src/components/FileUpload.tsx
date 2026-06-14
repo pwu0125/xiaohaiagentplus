@@ -27,7 +27,7 @@ const DEPARTMENT_OPTIONS = [
 ];
 
 const MASTER_AVATARS: Record<string, string> = {
-  'trump-skill': 'trump.png',
+  'trump-skill': 'trump',
 };
 
 const COLOR_MAP: Record<string, { border: string; bg: string; text: string; dot: string }> = {
