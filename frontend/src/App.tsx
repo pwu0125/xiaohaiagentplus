@@ -2,7 +2,7 @@ import { HashRouter, Routes, Route, useLocation, useNavigate } from 'react-route
 import { cn } from '@/lib/utils';
 import { FileText, BookOpen, Users } from 'lucide-react';
 import Home from './pages/Home';
-import PdfScan from './pages/PdfScan';
+import MaterialAnalysis from './pages/MaterialAnalysis';
 import KnowledgeBase from './pages/KnowledgeBase';
 import MultiAgentChat from './pages/MultiAgentChat';
 
@@ -48,7 +48,7 @@ function AppLayout() {
       <main className="max-w-7xl mx-auto p-6">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/pdf" element={<PdfScan />} />
+          <Route path="/pdf" element={<MaterialAnalysis />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
           <Route path="/chat" element={<MultiAgentChat />} />
         </Routes>

@@ -219,7 +219,7 @@ function FileUploadComponent({ onStart, showProjectTypes = true, showDepts = tru
               <button onClick={clearAllMasters} className="text-xs text-slate-500 hover:text-slate-400 px-2 py-1 rounded hover:bg-slate-700 transition-colors">清空</button>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {MASTER_OPTIONS.map((master) => {
               const isSelected = selectedMasters.includes(master.value);
               return (
@@ -227,7 +227,7 @@ function FileUploadComponent({ onStart, showProjectTypes = true, showDepts = tru
                   key={master.value}
                   onClick={() => toggleMaster(master.value)}
                   className={cn(
-                    'flex items-center gap-2 p-2.5 rounded-xl border transition-all duration-200',
+                    'flex items-start gap-2.5 p-3 rounded-xl border transition-all duration-200 text-left',
                     isSelected
                       ? 'border-amber-500 bg-amber-500/10 text-amber-400'
                       : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600',
@@ -237,14 +237,15 @@ function FileUploadComponent({ onStart, showProjectTypes = true, showDepts = tru
                     src={`/masters/${MASTER_AVATARS[master.value] || master.value}.png`}
                     alt={master.label}
                     className={cn(
-                      'w-10 h-10 rounded-full object-cover shrink-0 border',
+                      'w-10 h-10 rounded-full object-cover shrink-0 border mt-0.5',
                       isSelected ? 'border-amber-400' : 'border-slate-600',
                     )}
                   />
-                  <div className="text-left min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium truncate">{master.label}</div>
+                    <p className="text-[10px] text-slate-500 leading-tight mt-1 line-clamp-2">{master.quote}</p>
                   </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 ml-auto shrink-0" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 shrink-0 mt-1" />}
                 </button>
               );
             })}

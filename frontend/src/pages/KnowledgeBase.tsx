@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search, Tag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Tag, X, BookOpen, FileText, MessageSquare, Calendar, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAllTags, listBookmarks, searchBookmarks } from '@/lib/api';
 import type { BookmarkOut } from '@/types';
@@ -16,6 +17,25 @@ export default function KnowledgeBase() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 笔记卡片展开状态管理
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }, []);
+
+  // 获取笔记类型的图标和颜色配置
+  function getTypeMeta(type: string) {
+    switch (type) {
+      case 'ai-product':
+        return { label: '材料分析', icon: FileText, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' };
+      case 'committee':
+        return { label: '投决会', icon: MessageSquare, color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
+      default:
+        return { label: '笔记', icon: BookOpen, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+    }
+  }
 
   const fetchBookmarks = useCallback(async () => {
     setLoading(true);
@@ -135,50 +155,102 @@ export default function KnowledgeBase() {
 
       <div className="space-y-4">
         {error ? (
-          <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-5 text-red-100">
-            {error}
+          <div className="mt-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-100 flex items-center justify-between gap-3">
+            <span className="text-sm">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="shrink-0 p-1 hover:bg-red-500/20 rounded-lg transition-colors"
+              aria-label="关闭错误提示"
+            >
+              <X className="w-4 h-4 text-red-300" />
+            </button>
           </div>
         ) : null}
 
         <div className="grid gap-4">
           {loading ? (
-            <div className="rounded-3xl border border-slate-700 bg-slate-950/70 p-8 text-center text-slate-400">
-              加载中...
+            <div className="rounded-3xl border border-slate-700 bg-slate-950/70 p-12 text-center">
+              <div className="inline-flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
+                <span className="text-slate-400">正在加载知识库...</span>
+              </div>
             </div>
           ) : bookmarks.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/70 p-8 text-center text-slate-400">
-              当前没有匹配的书签或笔记。
+            <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/70 p-12 text-center">
+              <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400 text-lg mb-2">暂无匹配的知识笔记</p>
+              <p className="text-slate-500 text-sm">尝试调整搜索关键词或标签筛选条件</p>
             </div>
           ) : (
-            bookmarks.map((bookmark) => (
-              <article key={bookmark.id} className="rounded-3xl border border-slate-700 bg-slate-950/80 p-6 shadow-sm shadow-slate-950/10">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2 text-slate-400 text-sm">
-                      <span className="rounded-full bg-slate-800/70 px-2.5 py-1">{bookmark.bookmark_type === 'note' ? '笔记' : '书签'}</span>
-                      {bookmark.url ? (
-                        <a href={bookmark.url} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300">
-                          查看链接
-                        </a>
-                      ) : null}
-                    </div>
-                    <h2 className="text-xl font-semibold text-slate-100">{bookmark.title}</h2>
-                    {bookmark.content ? <p className="text-slate-400 whitespace-pre-wrap">{bookmark.content}</p> : null}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {bookmark.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
-                        {tag}
+            bookmarks.map((bookmark, index) => {
+              const typeMeta = getTypeMeta(bookmark.tags[0] || '');
+              const TypeIcon = typeMeta.icon;
+              const isExpanded = expandedId === bookmark.id;
+              const contentPreview = bookmark.content
+                ? bookmark.content.length > 150
+                  ? bookmark.content.slice(0, 150) + '...'
+                  : bookmark.content
+                : '';
+
+              return (
+                <motion.article
+                  key={bookmark.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: index * 0.05 }}
+                  className="rounded-2xl border border-slate-700 bg-slate-950/80 p-5 shadow-sm"
+                >
+                  <div className="flex flex-col gap-3">
+                    {/* 头部：类型标识 + 标签 */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${typeMeta.color}`}>
+                        <TypeIcon className="w-3 h-3" />
+                        {typeMeta.label}
                       </span>
-                    ))}
+                      {bookmark.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* 标题 */}
+                    <h2 className="text-lg font-semibold text-slate-100">{bookmark.title}</h2>
+
+                    {/* 内容：支持展开/折叠 */}
+                    {bookmark.content && (
+                      <div className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">
+                        {isExpanded ? bookmark.content : contentPreview}
+                        {bookmark.content.length > 150 && (
+                          <button
+                            onClick={() => toggleExpand(bookmark.id)}
+                            className="ml-2 inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 text-xs font-medium transition-colors"
+                          >
+                            {isExpanded ? (
+                              <>收起 <ChevronUp className="w-3 h-3" /></>
+                            ) : (
+                              <>展开详情 <ChevronDown className="w-3 h-3" /></>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 底部：创建时间 */}
+                    <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-800 text-xs text-slate-500">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(bookmark.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(bookmark.created_at).toLocaleTimeString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 flex gap-4 text-xs text-slate-500">
-                  <span>创建于 {new Date(bookmark.created_at).toLocaleString()}</span>
-                  <span>更新于 {new Date(bookmark.updated_at).toLocaleString()}</span>
-                </div>
-              </article>
-            ))
+                </motion.article>
+              );
+            })
           )}
         </div>
       </div>

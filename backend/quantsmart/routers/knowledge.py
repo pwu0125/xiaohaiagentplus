@@ -243,3 +243,98 @@ async def get_bookmarks_by_tag(
         "page": page,
         "page_size": page_size,
     }
+
+
+# ------------------------------------------------------------------
+# 分析报告端点
+# ------------------------------------------------------------------
+
+@router.get("/analysis")
+async def list_analysis(
+    analysis_type: Optional[str] = Query(
+        None, description="筛选 ai-product 或 committee"
+    ),
+    project_type: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1, description="页码"),
+    page_size: int = Query(default=20, ge=1, le=100, description="每页条数"),
+) -> dict[str, Any]:
+    """列出分析报告
+
+    支持按analysis_type和project_type筛选，支持分页。
+
+    Args:
+        analysis_type: 按分析类型筛选（如 material_analysis, ai-product, committee）
+        project_type: 按项目类型筛选
+        page: 页码
+        page_size: 每页条数
+
+    Returns:
+        包含 items(列表), total(总数), page, page_size 的响应
+    """
+    results = kb_service.search_analysis(
+        keyword=None,
+        analysis_type=analysis_type,
+        project_type=project_type,
+    )
+
+    total = len(results)
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    return {
+        "items": results[start:end],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+@router.get("/analysis/{analysis_id}")
+async def get_analysis(analysis_id: str) -> dict[str, Any]:
+    """获取单个分析报告
+
+    Args:
+        analysis_id: 分析报告ID
+
+    Returns:
+        分析报告数据
+
+    Raises:
+        HTTPException: 报告不存在时抛出404
+    """
+    result = kb_service.get_bookmark(analysis_id)
+    if result is None or result.get("bookmark_type") != "analysis":
+        logger.warning("[Knowledge] 分析报告不存在: %s", analysis_id)
+        raise HTTPException(
+            status_code=404, detail=f"分析报告不存在: {analysis_id}"
+        )
+    return result
+
+
+@router.post("/analysis/search")
+async def search_analysis(
+    keyword: str,
+    analysis_type: Optional[str] = None,
+) -> dict[str, Any]:
+    """搜索分析报告
+
+    支持关键词搜索（匹配标题和内容），可按analysis_type筛选。
+
+    Args:
+        keyword: 搜索关键词
+        analysis_type: 按分析类型筛选
+
+    Returns:
+        包含 results(结果列表) 和 count(结果数) 的响应
+    """
+    results = kb_service.search_analysis(
+        keyword=keyword,
+        analysis_type=analysis_type,
+    )
+    logger.info(
+        "[Knowledge] 搜索分析报告 '%s' (type=%s) 找到 %d 条结果",
+        keyword,
+        analysis_type,
+        len(results),
+    )
+    return {"results": results, "count": len(results)}

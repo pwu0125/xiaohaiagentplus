@@ -207,6 +207,12 @@ class CommitteeFlowOrchestrator:
             # ==============================================================
             # 阶段 3: 大师Agent — 4位投资大师可多选并行分析
             # ==============================================================
+            yield {
+                "type": "stage_start",
+                "stage": self.STAGE_MASTER_SKILL,
+                "session_id": session_id,
+            }
+
             master_skill_result = await self._run_master_skill(
                 structured_content=structured_content,
                 department_results=department_results,

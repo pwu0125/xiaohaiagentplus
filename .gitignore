@@ -17,10 +17,12 @@ build/
 
 # Data
 data/
-*.json
+# JSON — exclude analysis result artifacts, not config files
+data/**/*.json
 
 # Frontend
 node_modules/
+frontend/dist/
 *.log
 npm-debug.log*
 

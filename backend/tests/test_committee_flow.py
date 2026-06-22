@@ -18,8 +18,9 @@ import pytest
 
 from backend.agents.department_agents import (
     FinancialModelerAgent,
+    InvestmentAgent,
+    LegalAgent,
     MarketAnalystAgent,
-    RiskAssessorAgent,
 )
 from backend.agents.flow_state_manager import FlowStateManager
 from backend.agents.orchestrator_v2 import CommitteeFlowOrchestrator
@@ -101,7 +102,7 @@ class TestCommitteeFlowOrchestrator:
         ), patch.object(
             orchestrator,
             "_run_departments",
-            new=AsyncMock(return_value={"market": {}, "financial": {}, "risk": {}}),
+            new=AsyncMock(return_value={"market": {}, "financial": {}, "investment": {}}),
         ), patch.object(
             orchestrator,
             "_run_master_skill",
@@ -386,10 +387,10 @@ class TestDepartmentParallelExecution:
         api_key = "test-key"
         structured_content = "测试项目资料"
 
-        # 创建Agent实例
+        # 创建Agent实例（使用新9部门架构中的部门）
         market = MarketAnalystAgent(api_key)
         financial = FinancialModelerAgent(api_key)
-        risk = RiskAssessorAgent(api_key)
+        investment = InvestmentAgent(api_key)
 
         # Mock所有Agent的analyze方法
         with patch.object(
@@ -397,20 +398,20 @@ class TestDepartmentParallelExecution:
         ) as mock_market, patch.object(
             financial, "analyze", AsyncMock(return_value={"score": 80})
         ) as mock_financial, patch.object(
-            risk, "analyze", AsyncMock(return_value={"score": 65})
-        ) as mock_risk:
+            investment, "analyze", AsyncMock(return_value={"score": 65})
+        ) as mock_investment:
 
             # 并行执行
             results = await asyncio.gather(
                 market.analyze(structured_content),
                 financial.analyze(structured_content),
-                risk.analyze(structured_content),
+                investment.analyze(structured_content),
             )
 
             # 验证所有都被调用
             mock_market.assert_called_once_with(structured_content)
             mock_financial.assert_called_once_with(structured_content)
-            mock_risk.assert_called_once_with(structured_content)
+            mock_investment.assert_called_once_with(structured_content)
 
             # 验证结果
             assert len(results) == 3
@@ -555,9 +556,15 @@ def test_import_all_modules():
     from backend.agents.flow_state_manager import FlowStateManager
     from backend.agents.secretary_agent import SecretaryAgent
     from backend.agents.department_agents import (
+        AssetManagementAgent,
+        CostAgent,
+        DesignAgent,
+        EngineeringAgent,
         FinancialModelerAgent,
+        InvestmentAgent,
+        LegalAgent,
         MarketAnalystAgent,
-        RiskAssessorAgent,
+        OperationAgent,
     )
     from backend.agents.master_skill_agent import MasterSkillAgent
     from backend.agents.decision_maker_agent import DecisionMakerAgent
@@ -568,7 +575,13 @@ def test_import_all_modules():
     assert SecretaryAgent is not None
     assert MarketAnalystAgent is not None
     assert FinancialModelerAgent is not None
-    assert RiskAssessorAgent is not None
+    assert InvestmentAgent is not None
+    assert AssetManagementAgent is not None
+    assert OperationAgent is not None
+    assert DesignAgent is not None
+    assert EngineeringAgent is not None
+    assert CostAgent is not None
+    assert LegalAgent is not None
     assert MasterSkillAgent is not None
     assert DecisionMakerAgent is not None
     assert CommitteeFlowOrchestrator is not None

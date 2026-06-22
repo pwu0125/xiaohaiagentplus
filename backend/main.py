@@ -6,6 +6,8 @@ FastAPI 主应用 - 投委会分析系统 V2 + quantsmart 功能
     - POST /api/analyze                : 非流式分析（向后兼容）
     - GET  /api/status/{session_id}    : 查询流程状态
     - GET  /health                     : 健康检查
+    - POST /api/analyze/material       : 材料分析（非流式）
+    - POST /api/analyze/material/stream: 材料分析（SSE流式）
 
 quantsmart 功能端点：
     - POST /api/pdf/extract-url        : PDF URL提取文本
@@ -28,7 +30,7 @@ import json
 import logging
 import uuid
 from collections.abc import AsyncGenerator
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,6 +42,9 @@ from backend.config import Config
 
 # quantsmart 路由
 from backend.quantsmart.routers import pdf, knowledge, chat, agent
+
+# 材料分析器
+from backend.agents.material_analyzer import MaterialAnalyzer
 
 # ---------------------------------------------------------------------------
 # 日志配置
@@ -392,6 +397,198 @@ async def get_status(session_id: str) -> dict:
             status_code=404,
             detail=f"Session not found: {str(exc)}",
         )
+
+
+# ---------------------------------------------------------------------------
+# 材料分析端点
+# ---------------------------------------------------------------------------
+
+@app.post("/api/analyze/material")
+async def analyze_material(
+    files: List[UploadFile] = File(default=[]),
+    project_type: str = Form(...),
+) -> dict:
+    """材料分析端点（非流式）
+
+    接收multipart文件上传，逐个读取文件内容，
+    调用MaterialAnalyzer生成投资分析报告并保存到知识库。
+
+    Args:
+        files: 用户上传的材料文件列表（PDF/Excel/CSV/TXT等）
+        project_type: 项目类型，必填
+
+    Returns:
+        dict: 包含 success, session_id, result(报告), kb_id 的响应
+
+    Raises:
+        HTTPException: 分析过程中发生错误
+    """
+    session_id: str = str(uuid.uuid4())
+    api_key: str = config.API_KEY
+
+    logger.info(
+        "[session=%s] 收到材料分析请求 | project_type=%s | files=%d",
+        session_id,
+        project_type,
+        len(files),
+    )
+
+    # 读取并准备材料
+    materials: list[dict[str, Any]] = []
+    for file in files:
+        try:
+            content: bytes = await file.read()
+            materials.append({
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "content": content,
+                "size": len(content),
+            })
+        except Exception as exc:
+            logger.warning(
+                "[session=%s] 读取文件 %s 失败: %s",
+                session_id,
+                file.filename,
+                exc,
+            )
+            materials.append({
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "content": b"",
+                "size": 0,
+                "read_error": str(exc),
+            })
+
+    try:
+        analyzer = MaterialAnalyzer(
+            api_key=api_key,
+            api_base=config.API_BASE,
+            model=config.MODEL,
+        )
+        result = await analyzer.analyze(materials, project_type)
+
+        logger.info(
+            "[session=%s] 材料分析完成 | kb_id=%s",
+            session_id,
+            result.get("kb_id", ""),
+        )
+        return {
+            "success": True,
+            "session_id": session_id,
+            "result": result["report"],
+            "kb_id": result.get("kb_id", ""),
+        }
+    except Exception as exc:
+        logger.exception("[session=%s] 材料分析失败: %s", session_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"材料分析失败: {exc}",
+        )
+
+
+@app.post("/api/analyze/material/stream")
+async def analyze_material_stream(
+    files: List[UploadFile] = File(default=[]),
+    project_type: str = Form(...),
+) -> StreamingResponse:
+    """材料分析端点（SSE流式）
+
+    接收multipart文件上传，通过SSE推送各阶段进度和最终报告。
+
+    SSE事件序列:
+        1. stage_start(extraction)          -> 文件提取开始
+        2. stage_progress(extraction, ...)  -> 文件提取进度
+        3. stage_complete(extraction)       -> 文件提取完成
+        4. stage_start(secretary)           -> 秘书Agent开始
+        5. stage_complete(secretary)        -> 秘书Agent完成
+        6. stage_start(report_builder)      -> 报告生成开始
+        7. stage_progress(report_builder)   -> 报告生成进度
+        8. stage_complete(report_builder)   -> 报告生成完成
+        9. flow_complete                    -> 全部完成
+        10. error                            -> 错误事件
+
+    Args:
+        files: 用户上传的材料文件列表
+        project_type: 项目类型，必填
+
+    Returns:
+        StreamingResponse: SSE流，media_type为text/event-stream
+    """
+    session_id: str = str(uuid.uuid4())
+    api_key: str = config.API_KEY
+
+    logger.info(
+        "[session=%s] 收到材料流式分析请求 | project_type=%s | files=%d",
+        session_id,
+        project_type,
+        len(files),
+    )
+
+    # 读取并准备材料
+    materials: list[dict[str, Any]] = []
+    for file in files:
+        try:
+            content: bytes = await file.read()
+            materials.append({
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "content": content,
+                "size": len(content),
+            })
+        except Exception as exc:
+            logger.warning(
+                "[session=%s] 读取文件 %s 失败: %s",
+                session_id,
+                file.filename,
+                exc,
+            )
+            materials.append({
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "content": b"",
+                "size": 0,
+                "read_error": str(exc),
+            })
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """SSE事件字符串生成器。"""
+        analyzer = MaterialAnalyzer(
+            api_key=api_key,
+            api_base=config.API_BASE,
+            model=config.MODEL,
+        )
+        try:
+            async for event in analyzer.analyze_stream(
+                materials=materials,
+                project_type=project_type,
+                session_id=session_id,
+            ):
+                yield (
+                    f"event: {event['type']}\n"
+                    f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+                )
+        except Exception as exc:
+            logger.exception("[session=%s] 材料流式分析异常: %s", session_id, exc)
+            error_payload = json.dumps(
+                {
+                    "type": "error",
+                    "error": str(exc),
+                    "session_id": session_id,
+                },
+                ensure_ascii=False,
+            )
+            yield f"event: error\ndata: {error_payload}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Content-Type": "text/event-stream; charset=utf-8",
+        },
+    )
 
 
 @app.get("/health")
