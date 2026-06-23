@@ -56,6 +56,7 @@ function conclusionColor(conclusion: string) {
   return 'bg-red-500/20 text-red-400 border-red-500/40';
 }
 
+// @ts-ignore
 function conclusionBadgeColor(conclusion: string) {
   if (conclusion === '投') return 'bg-green-500/15 text-green-400 border-green-500/30 hover:bg-green-500/25';
   if (conclusion === '改') return 'bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25';

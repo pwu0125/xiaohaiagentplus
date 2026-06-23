@@ -185,6 +185,52 @@ export interface AIProductReport {
   report_header?: Record<string, any>;
 }
 
+// COB-REval 不动产估值
+export interface ReitResult {
+  code: string;
+  name: string;
+  sector: string;
+  asset_count: number;
+  dr: number;
+  cap_rate: number;
+}
+
+export interface ReitDetail extends ReitResult {
+  d6_signal?: string;
+  assets: string[];
+}
+
+export interface PricePoint {
+  date: string;
+  close: number;
+}
+
+export interface BenchmarkData {
+  median_dr: number;
+  median_cap_rate: number;
+  reits: ReitResult[];
+}
+
+// REITs Dashboard
+export interface ReitDashboardItem {
+  code: string;
+  name: string;
+  type: string;
+  list_date: string;
+  scale: string;
+  price: number | null;
+  change: string;
+  positive: boolean;
+  scanned_docs: number;
+}
+
+export interface ReitsDashboardData {
+  total_reits: number;
+  total_docs: number;
+  market_stats: Array<{ label: string; value: string; unit: string }>;
+  reits: ReitDashboardItem[];
+}
+
 // 知识库分析材料
 export interface KnowledgeAnalysisItem {
   id: string;

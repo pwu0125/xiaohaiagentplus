@@ -243,7 +243,7 @@ function FileUploadComponent({ onStart, showProjectTypes = true, showDepts = tru
                   />
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium truncate">{master.label}</div>
-                    <p className="text-[10px] text-slate-500 leading-tight mt-1 line-clamp-2">{master.quote}</p>
+                    <p className="text-[10px] text-slate-500 leading-tight mt-1 line-clamp-2">{(master as any).quote || master.subtitle}</p>
                   </div>
                   {isSelected && <Check className="w-3.5 h-3.5 shrink-0 mt-1" />}
                 </button>

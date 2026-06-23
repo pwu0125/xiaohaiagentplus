@@ -162,6 +162,7 @@ interface LogEntry {
 interface StageStatus {
   id: string;
   label: string;
+  description?: string;
   progress: number;
   completed: boolean;
   started: boolean;
@@ -380,7 +381,7 @@ export default function MaterialAnalysis() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <h1 className="text-3xl font-bold text-slate-100 mb-2">材料分析</h1>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">材料分析</h1>
                 <p className="text-slate-400 max-w-xl mx-auto">
                   上传项目材料（PDF、Excel、CSV、TXT），AI 自动提取关键指标并生成投资分析报告
                 </p>
@@ -552,13 +553,13 @@ export default function MaterialAnalysis() {
                 transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
                 className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full mx-auto mb-4"
               />
-              <h2 className="text-xl font-semibold text-slate-100 mb-1">正在分析材料...</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-1">正在分析材料...</h2>
               <p className="text-sm text-slate-400">AI 正在提取关键指标并生成报告</p>
             </div>
 
             {/* 阶段进度 */}
             <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 space-y-5">
-              {stages.map((stage, i) => (
+              {stages.map((stage, _i) => (
                 <div key={stage.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">

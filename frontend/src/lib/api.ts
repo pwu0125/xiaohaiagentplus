@@ -8,7 +8,15 @@ import type {
   MaterialStreamEvent,
   AIProductReport,
   KnowledgeAnalysisItem,
+  ReitResult,
+  ReitDetail,
+  PricePoint,
+  BenchmarkData,
+  ReitsDashboardData,
 } from '@/types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const axios: any;
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -718,12 +726,12 @@ export async function analyzeMaterialStream(
   files: File[],
   projectType: string,
   onEvent: (event: MaterialStreamEvent) => void,
-  onError?: (error: Error) => void,
+  _onError?: (error: Error) => void,
 ): Promise<void> {
   // Mock 模式：模拟SSE流式事件
   if (USE_MOCK) {
     const sessionId = crypto.randomUUID();
-    const stages = [
+    [
       { id: 'extraction', label: '文件提取' },
       { id: 'secretary', label: '秘书处理' },
       { id: 'report_builder', label: '报告生成' },
@@ -849,6 +857,65 @@ export async function searchAnalysisMaterials(
     analysis_type: analysisType,
   });
   return data;
+}
+
+// ===== COB-REval 不动产估值 API =====
+
+export async function fetchReitsSearch(query: string): Promise<ReitResult[]> {
+  try {
+    const response = await fetch(`${API_BASE}/api/reits/search?q=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('fetchReitsSearch failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchReitsDetail(code: string): Promise<ReitDetail> {
+  try {
+    const response = await fetch(`${API_BASE}/api/reits/${encodeURIComponent(code)}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('fetchReitsDetail failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchReitsPrice(code: string): Promise<PricePoint[]> {
+  try {
+    const response = await fetch(`${API_BASE}/api/reits/price/${encodeURIComponent(code)}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('fetchReitsPrice failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchCReitsIndex(): Promise<{date: string; index: number}[]> {
+  const response = await fetch(`${API_BASE}/api/reits/c-reits-index`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function fetchBenchmark(): Promise<BenchmarkData> {
+  try {
+    const response = await fetch(`${API_BASE}/api/benchmark`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('fetchBenchmark failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchReitsDashboard(): Promise<ReitsDashboardData> {
+  const response = await fetch(`${API_BASE}/api/reits/dashboard`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
 }
 
 function generateMockDiscussion(

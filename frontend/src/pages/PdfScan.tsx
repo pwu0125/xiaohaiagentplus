@@ -12,7 +12,7 @@ export default function PdfScan() {
             className="w-32 h-32 rounded-full object-cover border-4 border-blue-500/30 shadow-xl shadow-blue-500/20 mx-auto mb-5"
             initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} />
           <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="text-4xl font-bold text-slate-100 mb-3">小海Agent</motion.h2>
+            className="text-4xl font-bold text-slate-900 mb-3">小海Agent</motion.h2>
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="text-xl text-blue-400 mb-2">智能投资分析</motion.p>
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}

@@ -29,7 +29,7 @@ export default function PageIntro() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl font-bold text-slate-100 mb-3"
+          className="text-4xl font-bold text-slate-900 mb-3"
         >
           小海Agent
         </motion.h2>
